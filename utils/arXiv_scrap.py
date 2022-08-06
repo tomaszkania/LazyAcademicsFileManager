@@ -18,13 +18,10 @@ ANYWHERECONTA2: str = ""         # As above.
 DATEFROM: str = ""
 DATETO: str = ""
 
+# Folder preparation
 # The files will be fetched to ./utils/ArXiv_dump_"timestamp"
 
-# Variables:
-
 dumpfolder = datetime.now().strftime('ArXiv_dump_%Y%m%d%H%M')
-
-# Folder preparation
 os.makedirs(dumpfolder, exist_ok=True)
 
 # Search placeholders
