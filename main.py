@@ -26,7 +26,6 @@ def move_pdf(PATH):
 
 if __name__ == '__main__':
     PATH = os.path.join(Path.home(), "Downloads")
-    PATH_DUPLICATES = PATH + "/Documents"
-    purge(PATH_DUPLICATES)
-    main(PATH)
-    move_pdf(PATH_DUPLICATES)
+    PATH_DUPLICATES = r"D:\Books"
+    #PATH_DUPLICATES = PATH + "/Documents"
+    purge(PATH)
