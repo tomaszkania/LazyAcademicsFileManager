@@ -40,6 +40,8 @@ if len(DATEFROM) > 3 and len(DATETO) > 3:
 
 queries: list[str] = []
 
+q = query
+
 for placeholder, key in working_dictionary:
     q = q.replace(placeholder, key)
 queries.append(q)
