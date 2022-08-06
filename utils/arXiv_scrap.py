@@ -38,7 +38,7 @@ if len(DATEFROM) > 3 and len(DATETO) > 3:
     placeholders = placeholders + ["DATEFROM", "DATETO"]
     keywords = keywords + [DATEFROM, DATETO]
 
-queries: list[str] = []
+queries = []
 
 q = query
 
