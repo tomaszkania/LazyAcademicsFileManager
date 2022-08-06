@@ -1,5 +1,3 @@
-from typing import List
-
 from bs4 import BeautifulSoup
 import re
 import os
@@ -20,16 +18,24 @@ ANYWHERECONTA2: str = ""
 DATEFROM = ""
 DATETO = ""
 
-##
+# The files will be fetched to ./utils/ArXiv_dump_"timestamp"
+
+# Variables:
 
 dumpfolder = datetime.now().strftime('ArXiv_dump_%Y%m%d%H%M')
+
+# Folder preparation
 os.makedirs(dumpfolder, exist_ok=True)
+
+# Search placeholders
 placeholders = ["AUTHORCONTAINSPLACEHOLDER", "TITLECONTAINS1PLACEHOLDER", "TITLECONTAINS2PLACEHOLDER", "MSCCLACONTAINSPLACEHOLDER", "ANYWHERECONTA1PLACEHOLDER",
             'ANYWHERECONTA2PLACEHOLDER', 'DATEFROM', 'DATETO']
 keywords = [AUTHORCONTAINS, TITLECONTAINS1, TITLECONTAINS2, MSCCLACONTAINS, ANYWHERECONTA1, ANYWHERECONTA2]
+
 working_dictionary = zip(placeholders, keywords)
 result_pages_no = int(LIMITSEARCH / 200)
 
+# Checking whether time range is set
 if len(DATEFROM) > 3 and len(DATETO) > 3:
     query = query_dates
     placeholders = placeholders + ["DATEFROM", "DATETO"]
@@ -37,8 +43,6 @@ if len(DATEFROM) > 3 and len(DATETO) > 3:
 
 queries: list[str] = []
 
-q = query
-print(q)
 for placeholder, key in working_dictionary:
     q = q.replace(placeholder, key)
 queries.append(q)
@@ -47,10 +51,6 @@ for index, query in enumerate(queries):
     query = query + "&start=" + str(index * 200)
     print(query)
 
-
-for q in queries:
-    print(q)
-print(len(queries))
 for url_to_scrape in queries:
     # create document
     html_document = get_html_document(url_to_scrape)
