@@ -6,7 +6,7 @@ from ArxivQuery.AQuery import *
 
 # SPECIFY YOUR SEARCH
 
-AUTHORCONTAINS: str = "Wąsowicz" # Add author's name
+AUTHORCONTAINS: str = "Kania"    # Add author's name
 TITLECONTAINS1: str = ""         # Some phrase from the title
 TITLECONTAINS2: str = ""         # Some phrase from the title, 2
 MSCCLACONTAINS: str = ""         # MSC classification tag
