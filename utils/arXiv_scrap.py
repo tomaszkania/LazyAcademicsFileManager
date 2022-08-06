@@ -6,17 +6,17 @@ from ArxivQuery.AQuery import *
 
 # SPECIFY YOUR SEARCH
 
-AUTHORCONTAINS: str = "Wąsowicz"
-TITLECONTAINS1: str = ""
-TITLECONTAINS2: str = ""
-MSCCLACONTAINS: str = ""
-ANYWHERECONTA1: str = ""
-ANYWHERECONTA2: str = ""
+AUTHORCONTAINS: str = "Kania"    # Add author's name
+TITLECONTAINS1: str = ""         # Some phrase from the title
+TITLECONTAINS2: str = ""         # Some phrase from the title, 2
+MSCCLACONTAINS: str = ""         # MSC classification tag
+ANYWHERECONTA1: str = ""         # Anything, anywhere: could be the are tag, e.g. [math.GN]
+ANYWHERECONTA2: str = ""         # As above.
 
 # SPECIFY DATE RANGE (IF NOT RELEVANT LEAVE EMPTY STRINGS): DATE FORMAT YYYY-MM-DD
 
-DATEFROM = ""
-DATETO = ""
+DATEFROM: str = ""
+DATETO: str = ""
 
 # The files will be fetched to ./utils/ArXiv_dump_"timestamp"
 
