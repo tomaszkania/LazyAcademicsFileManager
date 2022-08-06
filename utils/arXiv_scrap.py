@@ -1,12 +1,13 @@
 from bs4 import BeautifulSoup
 import re
 import os
+import requests
 from datetime import datetime
-from ArxivQuery.AQuery import *
+from ArxivQuery.AQuery import query, query_dates, LIMITSEARCH, cut_arxiv_link, get_html_document
 
 # SPECIFY YOUR SEARCH
 
-AUTHORCONTAINS: str = "Kania"    # Add author's name
+AUTHORCONTAINS: str = "Kania"    # Add author's name - it is not mandatory; can be left as empty string
 TITLECONTAINS1: str = ""         # Some phrase from the title
 TITLECONTAINS2: str = ""         # Some phrase from the title, 2
 MSCCLACONTAINS: str = ""         # MSC classification tag
@@ -57,7 +58,7 @@ for url_to_scrape in queries:
     # create soap object
     soup = BeautifulSoup(html_document, 'html.parser')
     links = soup.find_all('a', attrs={'href': re.compile("^https://arxiv.org/pdf/")})
-
+    print(links[-3:])
     print(links)
 
     for link in links:
