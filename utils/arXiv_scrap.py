@@ -56,7 +56,7 @@ for url_to_scrape in queries:
     # create soap object
     soup = BeautifulSoup(html_document, 'html.parser')
     links = soup.find_all('a', attrs={'href': re.compile("^https://arxiv.org/pdf/")})
-    number_of_links = len(link)
+    number_of_links = len(links)
     print(f"Found: {number_of_links} preprints.")
 
     for link in links:
