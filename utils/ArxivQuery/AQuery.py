@@ -1,4 +1,6 @@
 import requests
+import re
+
 
 query_dates = "https://arxiv.org/search/advanced?advanced=terms-0-operator=AND&terms-0-term=AUTHORCONTAINSPLACEHOLDER&terms-0-field"\
         "=author&terms-1-operator=AND&terms-1-term=TITLECONTAINS1PLACEHOLDER&terms-1-field=title&terms-2-operator=AND&terms-2"\
@@ -28,4 +30,6 @@ def get_html_document(url):
 
 
 def cut_arxiv_link(string):
-    return string[22:] + ".pdf"
+    cut_string = string[22:]
+    cut_string = re.sub('^\d+(\.\d+)*$', '', cut_string)  # accept numbers separated by dots
+    return cut_string + ".pdf"
