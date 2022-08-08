@@ -7,8 +7,8 @@ from ArxivQuery.AQuery import query, query_dates, LIMITSEARCH, cut_arxiv_link, g
 
 # SPECIFY YOUR SEARCH
 
-AUTHORCONTAINS: str = "Kania"    # Add author's name - it is not mandatory; can be left as empty string
-TITLECONTAINS1: str = ""         # Some phrase from the title
+AUTHORCONTAINS: str = ""    # Add author's name - it is not mandatory; can be left as empty string
+TITLECONTAINS1: str = "Banach"         # Some phrase from the title
 TITLECONTAINS2: str = ""         # Some phrase from the title, 2
 MSCCLACONTAINS: str = ""         # MSC classification tag
 ANYWHERECONTA1: str = ""         # Anything, anywhere: could be the are tag, e.g. [math.GN]
@@ -16,8 +16,8 @@ ANYWHERECONTA2: str = ""         # As above.
 
 # SPECIFY DATE RANGE (IF NOT RELEVANT LEAVE EMPTY STRINGS): DATE FORMAT YYYY-MM-DD
 
-DATEFROM: str = ""
-DATETO: str = ""
+DATEFROM: str = "2010-10-10"
+DATETO: str = "2011-10-10"
 
 # Folder preparation
 # The files will be fetched to ./utils/ArXiv_dump_"timestamp"
@@ -29,8 +29,6 @@ os.makedirs(dumpfolder, exist_ok=True)
 placeholders = ["AUTHORCONTAINSPLACEHOLDER", "TITLECONTAINS1PLACEHOLDER", "TITLECONTAINS2PLACEHOLDER", "MSCCLACONTAINSPLACEHOLDER", "ANYWHERECONTA1PLACEHOLDER",
             'ANYWHERECONTA2PLACEHOLDER']
 keywords = [AUTHORCONTAINS, TITLECONTAINS1, TITLECONTAINS2, MSCCLACONTAINS, ANYWHERECONTA1, ANYWHERECONTA2]
-
-working_dictionary = zip(placeholders, keywords)
 result_pages_no = int(LIMITSEARCH / 200)
 
 # Checking whether time range is set
@@ -39,8 +37,8 @@ if len(DATEFROM) > 3 and len(DATETO) > 3:
     placeholders = placeholders + ["DATEFROM", "DATETO"]
     keywords = keywords + [DATEFROM, DATETO]
 
+working_dictionary = zip(placeholders, keywords)
 queries = []
-
 q = query
 
 for placeholder, key in working_dictionary:
@@ -58,8 +56,8 @@ for url_to_scrape in queries:
     # create soap object
     soup = BeautifulSoup(html_document, 'html.parser')
     links = soup.find_all('a', attrs={'href': re.compile("^https://arxiv.org/pdf/")})
-    print(links[-3:])
-    print(links)
+    number_of_links = len(link)
+    print(f"Found: {number_of_links} preprints.")
 
     for link in links:
         url = link.get('href')
