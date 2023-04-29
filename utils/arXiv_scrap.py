@@ -1,72 +1,87 @@
-from bs4 import BeautifulSoup
-import re
 import os
 import requests
-from datetime import datetime
-from ArxivQuery.AQuery import query, query_dates, LIMITSEARCH, cut_arxiv_link, get_html_document
+import feedparser
+import re
+from typing import Dict, List
 
-# SPECIFY YOUR SEARCH
+class ArxivScraper:
+    def __init__(self, max_results: int = 10):
+        self.max_results = max_results
+        self.base_url = "http://export.arxiv.org/api/query?"
+        self.pdf_base_url = "https://arxiv.org/pdf/"
 
-AUTHORCONTAINS: str = ""    # Add author's name - it is not mandatory; can be left as empty string
-TITLECONTAINS1: str = "Banach"         # Some phrase from the title
-TITLECONTAINS2: str = ""         # Some phrase from the title, 2
-MSCCLACONTAINS: str = ""         # MSC classification tag
-ANYWHERECONTA1: str = ""         # Anything, anywhere: could be the are tag, e.g. [math.GN]
-ANYWHERECONTA2: str = ""         # As above.
+    @staticmethod
+    def build_query(authorcontains: str = "", titlecontains: str = "", year_from: int = 0, year_to: int = 0) -> str:
+        query_parts = []
 
-# SPECIFY DATE RANGE (IF NOT RELEVANT LEAVE EMPTY STRINGS): DATE FORMAT YYYY-MM-DD
+        if authorcontains:
+            query_parts.append(f"au:{authorcontains}")
 
-DATEFROM: str = "2010-10-10"
-DATETO: str = "2011-10-10"
+        if titlecontains:
+            query_parts.append(f"ti:{titlecontains}")
 
-# Folder preparation
-# The files will be fetched to ./utils/ArXiv_dump_"timestamp"
+        if year_from and year_to:
+            query_parts.append(f"submittedDate:[{year_from}0101 TO {year_to}1231]")
+        elif year_from:
+            query_parts.append(f"submittedDate:[{year_from}0101 TO *]")
+        elif year_to:
+            query_parts.append(f"submittedDate:[* TO {year_to}1231]")
 
-dumpfolder = datetime.now().strftime('ArXiv_dump_%Y%m%d%H%M')
-os.makedirs(dumpfolder, exist_ok=True)
+        query = " AND ".join(query_parts)
+        return query
 
-# Search placeholders
-placeholders = ["AUTHORCONTAINSPLACEHOLDER", "TITLECONTAINS1PLACEHOLDER", "TITLECONTAINS2PLACEHOLDER", "MSCCLACONTAINSPLACEHOLDER", "ANYWHERECONTA1PLACEHOLDER",
-            'ANYWHERECONTA2PLACEHOLDER']
-keywords = [AUTHORCONTAINS, TITLECONTAINS1, TITLECONTAINS2, MSCCLACONTAINS, ANYWHERECONTA1, ANYWHERECONTA2]
-result_pages_no = int(LIMITSEARCH / 200)
+    def _get_search_url(self, query: str) -> str:
+        return f"{self.base_url}search_query={query}&start=0&max_results={self.max_results}"
 
-# Checking whether time range is set
-if len(DATEFROM) > 3 and len(DATETO) > 3:
-    query = query_dates
-    placeholders = placeholders + ["DATEFROM", "DATETO"]
-    keywords = keywords + [DATEFROM, DATETO]
+    def get_paper_list(self, query: str) -> List[Dict[str, str]]:
+        url = self._get_search_url(query)
+        response = requests.get(url)
+        response.raise_for_status()
 
-working_dictionary = zip(placeholders, keywords)
-queries = []
-q = query
+        # Use feedparser to parse the XML response
+        parsed_response = feedparser.parse(response.content)
+        entries = parsed_response["entries"]
 
-for placeholder, key in working_dictionary:
-    q = q.replace(placeholder, key)
-queries.append(q)
+        paper_list = [
+            {
+                "id": entry["id"].split("/abs/")[-1],
+                "title": entry["title"],
+                "authors": ", ".join(author["name"] for author in entry["authors"]),
+                "published": entry["published"],
+            }
+            for entry in entries
+        ]
+        return paper_list
 
-for index, query in enumerate(queries):
-    query = query + "&start=" + str(index * 200)
-    print(query)
+    def download_pdfs(self, paper_list: List[Dict[str, str]], folder: str = "pdfs"):
+        os.makedirs(folder, exist_ok=True)
+        for paper in paper_list:
+            pdf_url = f"{self.pdf_base_url}{paper['id']}.pdf"
+            response = requests.get(pdf_url)
+            response.raise_for_status()
 
-for url_to_scrape in queries:
-    # create document
-    html_document = get_html_document(url_to_scrape)
+            # Remove the version number (e.g., "v2") from the paper ID
+            sanitized_id = re.sub(r'v\d+$', '', paper['id'])
+            # Replace forward slash with underscore
+            sanitized_id = sanitized_id.replace('/', '_')
+            pdf_path = os.path.join(folder, f"{sanitized_id}.pdf")
 
-    # create soap object
-    soup = BeautifulSoup(html_document, 'html.parser')
-    links = soup.find_all('a', attrs={'href': re.compile("^https://arxiv.org/pdf/")})
-    number_of_links = len(links)
-    print(f"Found: {number_of_links} preprints.")
+            with open(pdf_path, "wb") as pdf_file:
+                pdf_file.write(response.content)
+        print(f"Downloaded {len(paper_list)} PDFs to the '{folder}' folder.")
 
-    for link in links:
-        url = link.get('href')
-        print(url)
-        name = cut_arxiv_link(url)
-        print(name)
-        local_file = os.path.join(dumpfolder, name)
-        data = requests.get(url)
-        with open(local_file, 'wb') as file:
-            file.write(data.content)
 
-##############
+# Example usage
+scraper = ArxivScraper(max_results=5)
+
+# Build query
+query = scraper.build_query(authorcontains="Kania", titlecontains="Banach", year_from=2010, year_to=2022)
+
+# Fetch paper list
+paper_list = scraper.get_paper_list(query)
+
+for paper in paper_list:
+    print(f"{paper['title']} by {paper['authors']} - {paper['published']}")
+
+# Download PDFs
+scraper.download_pdfs(paper_list, "pdfs")
