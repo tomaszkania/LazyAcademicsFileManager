@@ -2,5 +2,5 @@ flake8==4.0.1
 mccabe==0.6.1
 pycodestyle==2.8.0
 pyflakes==2.4.0
-PyPDF2==2.8.1
+PyPDF3==1.0.6
 typing-extensions==4.3.0
