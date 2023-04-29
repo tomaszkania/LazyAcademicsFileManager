@@ -1,42 +1,76 @@
 import os
 import shutil
 import re
-import PyPDF2
+import PyPDF3
+from typing import List
 
-from utils.ext_manager import Extensions
 
 
 class ArxivIdentify(Extensions):
-    def __init__(self, path):
+    """
+    A class to identify and organize arXiv preprints in a given directory.
+    Inherits from the `Extensions` class.
+    """
+
+    def __init__(self, path: str):
+        """
+        Initialize an ArxivIdentify instance.
+
+        Args:
+            path (str): The directory path containing the PDF files.
+        """
         super().__init__(path)
 
-    def get_arxiv_identifier(self):
-        files = []
-        for entry in os.scandir(self.path):
-            if entry.is_file():
-                files.append(entry.name)
-            else:
-                continue
-        for f in files:
-            if f.endswith('.pdf'):
-                print(f)
-                possible_preprint = PyPDF2.PdfFileReader(os.path.join(self.path, f))
-                frontpage = possible_preprint.getPage(0)
-                frontpage = frontpage.extractText()
-                print(type(frontpage))
-                # identifiers = re.findall(r"(?i)arXiv:[\d{4}\.\d*]", frontpage)
+    def get_arxiv_identifier(self) -> None:
+        """
+        Identify arXiv preprints in the directory, and move them to their respective
+        category subdirectories.
+        """
+        files = self._get_files_in_directory()
+        for file in files:
+            if file.endswith('.pdf'):
+                print(file)
+                possible_preprint = PyPDF3.PdfFileReader(os.path.join(self.path, file))
+                frontpage = possible_preprint.getPage(0).extractText()
+
                 if re.search(r'arXiv:', frontpage):
-                    position = frontpage.index('arXiv:')
-                    # identifier = frontpage[position + 6:position + 18].replace(" ", "")  # rename the filename after
-                    # invoking the purge method
-                    category_placeholder = frontpage[position + 18:position + 35]  # we are avoiding deliberately
-                    # complicated regexs
-                    category_leftendpoint = category_placeholder.find("[")
-                    category_rightendpoint = category_placeholder.find("]")
-                    category = category_placeholder[category_leftendpoint + 1:category_rightendpoint]
+                    category = self._extract_category(frontpage)
                     destpath = os.path.join(self.path, category)
                     os.makedirs(destpath, exist_ok=True)
-                    nfile = os.path.join(destpath, f)
-                    shutil.move(os.path.join(self.path, f), nfile)
+                    nfile = os.path.join(destpath, file)
+                    shutil.move(os.path.join(self.path, file), nfile)
                 else:
                     print("Likely not an arXiv preprint.")
+
+    def _get_files_in_directory(self) -> List[str]:
+        """
+        Retrieve the list of file names in the directory.
+
+        Returns:
+            List[str]: A list of file names in the directory.
+        """
+        return [entry.name for entry in os.scandir(self.path) if entry.is_file()]
+
+    @staticmethod
+    def _extract_category(frontpage: str) -> str:
+        """
+        Extract the arXiv category from the front page of the PDF.
+
+        Args:
+            frontpage (str): The text extracted from the front page of the PDF.
+
+        Returns:
+            str: The arXiv category.
+        """
+        position = frontpage.index('arXiv:')
+        category_placeholder = frontpage[position + 18:position + 35]
+        category_leftendpoint = category_placeholder.find("[")
+        category_rightendpoint = category_placeholder.find("]")
+        return category_placeholder[category_leftendpoint + 1:category_rightendpoint]
+
+
+if __name__ == "__main__":
+    # Example usage
+    path = r"C:\Users\Tomek\Downloads\pdfs"
+    arxiv_identifier = ArxivIdentify(path)
+    arxiv_identifier.get_arxiv_identifier()
